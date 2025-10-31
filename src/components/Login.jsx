@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { auth, signInWithPhoneNumber } from "../firebaseConfig";
-import { RecaptchaVerifier } from "firebase/auth"; // ✅ correct import path
+import { auth } from "../firebaseConfig";
+import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth"; // ✅ correct import path
 import { useDispatch } from "react-redux";
 import { login } from "../features/authSlice";
 import { useNavigate } from "react-router-dom";

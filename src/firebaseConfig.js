@@ -12,6 +12,14 @@ const firebaseConfig = {
   messagingSenderId: "43338568383",
   appId: "1:43338568383:web:bb68a721ce5c31935dec0a",
 };
-
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+// Initialize Firebase Authentication
+const auth = getAuth(app);
+
+// Optional: set default language for reCAPTCHA
+auth.languageCode = "en";
+
+// Export auth
+export { auth };
