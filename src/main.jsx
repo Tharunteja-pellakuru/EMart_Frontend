@@ -1,11 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Provider } from "react-redux";
 import store from "./app/store";
 import "./index.css";
+import App from "./App";
+import HomePage from "./pages/HomePage";
+import Login from "./components/Login";
 
-// ✅ Apply saved theme on app load
+// ✅ Theme handling
 const savedTheme = localStorage.getItem("theme");
 if (savedTheme === "dark") {
   document.documentElement.classList.add("dark");
@@ -13,8 +16,24 @@ if (savedTheme === "dark") {
   document.documentElement.classList.remove("dark");
 }
 
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <App />,
+    children: [
+      {
+        path: "login",
+        element: <Login />,
+      },
+    ],
+  },
+]);
+
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <Provider store={store}>
-    <App />
-  </Provider>
+  <React.StrictMode>
+    {/* ✅ Wrap entire app inside Redux Provider */}
+    <Provider store={store}>
+      <RouterProvider router={router} />
+    </Provider>
+  </React.StrictMode>
 );

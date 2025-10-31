@@ -3,6 +3,7 @@ import { FaUserCircle, FaShoppingCart, FaBars, FaTimes } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../features/authSlice";
 import Logo from "../assets/Logo.png";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   const dispatch = useDispatch();
@@ -40,9 +41,11 @@ const Navbar = () => {
               onClick={() => dispatch(logout())}
             />
           ) : (
-            <button className="bg-green-600 hover:bg-green-700 text-white font-medium px-5 py-2 rounded-full shadow transition-all">
-              Login
-            </button>
+            <Link to="/login">
+              <button className="bg-green-600 hover:bg-green-700 text-white font-medium px-5 py-2 rounded-full shadow transition-all">
+                Login
+              </button>
+            </Link>
           )}
         </div>
 
