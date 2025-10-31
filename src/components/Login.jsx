@@ -4,9 +4,8 @@ import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
 } from "../firebaseConfig";
-
 import { useDispatch } from "react-redux";
-import { login } from "../features/authSlice";
+import { login } from "../features/authSlice"; // ✅ correct action
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
@@ -19,19 +18,32 @@ const Login = () => {
 
   const handleClose = () => navigate("/");
 
+  // ✅ Setup reCAPTCHA only once
   const setupRecaptcha = () => {
-    window.recaptchaVerifier = new RecaptchaVerifier(
-      auth,
-      "recaptcha-container",
-      {
-        size: "invisible",
-      }
-    );
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(
+        auth,
+        "recaptcha-container",
+        {
+          size: "invisible",
+          callback: () => {
+            console.log("reCAPTCHA verified");
+          },
+          "expired-callback": () => {
+            setMessage("reCAPTCHA expired. Please try again.");
+          },
+        }
+      );
+    }
   };
 
+  // ✅ Send OTP
   const sendOtp = async (e) => {
     e.preventDefault();
-    if (!phone) return setMessage("Please enter a valid phone number");
+
+    if (!phone || phone.length < 10) {
+      return setMessage("Please enter a valid 10-digit phone number");
+    }
 
     setupRecaptcha();
     const appVerifier = window.recaptchaVerifier;
@@ -43,15 +55,17 @@ const Login = () => {
         appVerifier
       );
       setConfirmationResult(result);
-      setMessage("OTP sent successfully!");
+      setMessage("✅ OTP sent successfully!");
     } catch (error) {
-      setMessage(error.message);
+      console.error(error);
+      setMessage("Error sending OTP: " + error.message);
     }
   };
 
+  // ✅ Verify OTP
   const verifyOtp = async (e) => {
     e.preventDefault();
-    if (!otp || !confirmationResult) return setMessage("Enter valid OTP");
+    if (!otp || !confirmationResult) return setMessage("Enter a valid OTP");
 
     try {
       const userCred = await confirmationResult.confirm(otp);
@@ -59,11 +73,12 @@ const Login = () => {
         phone: userCred.user.phoneNumber,
         uid: userCred.user.uid,
       };
-      dispatch(loginSuccess(user));
-      setMessage("Login successful!");
+      dispatch(login(user)); // ✅ corrected action name
+      setMessage("✅ Login successful!");
       navigate("/");
     } catch (error) {
-      setMessage("Invalid OTP, please try again");
+      console.error(error);
+      setMessage("❌ Invalid OTP, please try again");
     }
   };
 
@@ -114,7 +129,15 @@ const Login = () => {
         )}
 
         {message && (
-          <p className="text-sm text-center mt-2 text-green-600">{message}</p>
+          <p
+            className={`text-sm text-center mt-2 ${
+              message.includes("Error") || message.includes("Invalid")
+                ? "text-red-600"
+                : "text-green-600"
+            }`}
+          >
+            {message}
+          </p>
         )}
 
         <div id="recaptcha-container"></div>

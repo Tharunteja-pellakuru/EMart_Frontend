@@ -7,11 +7,7 @@ import {
   signInWithPhoneNumber,
 } from "firebase/auth";
 
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
 // Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyCsZT7kchSvao4z9rigqz6w1p8zpANHO2Y",
   authDomain: "emart-dceb9.firebaseapp.com",
@@ -26,4 +22,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
-export { app, auth, RecaptchaVerifier, signInWithPhoneNumber };
+auth.languageCode = "en"; // optional: sets language for reCAPTCHA
+
+export { auth, RecaptchaVerifier, signInWithPhoneNumber };
