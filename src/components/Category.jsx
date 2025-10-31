@@ -12,43 +12,44 @@ const Category = ({ categories = [], storeName }) => {
   const autoScrollActive = useRef(true);
   const autoScrollTimer = useRef(null);
 
-  // 🟢 Scroll manually with buttons
+  // 🟢 Manual scroll with buttons
   const scroll = (direction) => {
     const container = scrollRef.current;
     if (!container) return;
 
-    // 🛑 Stop auto-scroll
+    // 🛑 Stop auto-scroll temporarily
     autoScrollActive.current = false;
     if (autoScrollTimer.current) clearTimeout(autoScrollTimer.current);
 
-    // Perform manual scroll
     const scrollAmount = 300;
     container.scrollBy({
       left: direction === "left" ? -scrollAmount : scrollAmount,
       behavior: "smooth",
     });
 
-    // 🕒 Resume auto-scroll after 3 seconds
+    // 🕒 Resume after 3s
     autoScrollTimer.current = setTimeout(() => {
       autoScrollActive.current = true;
     }, 3000);
   };
 
-  // 🟢 Auto smooth scrolling effect
+  // 🟢 Auto-scroll logic
   useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
+
+    // Disable auto-scroll on small screens for smoother touch UX
+    if (window.innerWidth < 768) {
+      autoScrollActive.current = false;
+      return;
+    }
 
     let scrollDirection = 1;
     const scrollStep = 1;
 
     const interval = setInterval(() => {
-      if (!container) return;
-      if (!autoScrollActive.current) return; // ⛔ skip if paused
-
+      if (!autoScrollActive.current) return;
       container.scrollLeft += scrollStep * scrollDirection;
-
-      // Reverse at edges
       if (
         container.scrollLeft + container.clientWidth >= container.scrollWidth ||
         container.scrollLeft <= 0
@@ -57,7 +58,26 @@ const Category = ({ categories = [], storeName }) => {
       }
     }, 20);
 
-    return () => clearInterval(interval);
+    // 🟢 Detect touch to pause/resume auto-scroll
+    const handleTouchStart = () => {
+      autoScrollActive.current = false;
+      if (autoScrollTimer.current) clearTimeout(autoScrollTimer.current);
+    };
+
+    const handleTouchEnd = () => {
+      autoScrollTimer.current = setTimeout(() => {
+        autoScrollActive.current = true;
+      }, 3000);
+    };
+
+    container.addEventListener("touchstart", handleTouchStart);
+    container.addEventListener("touchend", handleTouchEnd);
+
+    return () => {
+      clearInterval(interval);
+      container.removeEventListener("touchstart", handleTouchStart);
+      container.removeEventListener("touchend", handleTouchEnd);
+    };
   }, []);
 
   // 🟠 Dynamic colors & emoji
@@ -79,6 +99,7 @@ const Category = ({ categories = [], storeName }) => {
 
       {/* 🟢 Scrollable Category Row */}
       <div className="relative flex items-center overflow-visible">
+        {/* Left button */}
         <button
           onClick={() => scroll("left")}
           className={`hidden sm:flex absolute -left-3 md:-left-6 bg-white shadow-md rounded-full p-3 sm:p-4 ${hoverBg} hover:scale-110 transition-all duration-300 z-10 items-center justify-center`}
@@ -86,6 +107,7 @@ const Category = ({ categories = [], storeName }) => {
           <FaChevronLeft className={`${iconColor} text-lg sm:text-xl`} />
         </button>
 
+        {/* Scrollable container */}
         <div
           ref={scrollRef}
           className="flex space-x-5 sm:space-x-7 overflow-x-scroll scroll-smooth no-scrollbar w-full py-2"
@@ -111,6 +133,7 @@ const Category = ({ categories = [], storeName }) => {
           ))}
         </div>
 
+        {/* Right button */}
         <button
           onClick={() => scroll("right")}
           className={`hidden sm:flex absolute -right-3 md:-right-6 bg-white shadow-md rounded-full p-3 sm:p-4 ${hoverBg} hover:scale-110 transition-all duration-300 z-10 items-center justify-center`}
