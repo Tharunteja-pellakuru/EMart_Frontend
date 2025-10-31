@@ -84,9 +84,11 @@ const Navbar = () => {
                 Logout
               </button>
             ) : (
-              <button className="text-green-600 font-medium hover:text-green-700">
-                Login
-              </button>
+              <Link to="/login">
+                <button className="text-green-600 font-medium hover:text-green-700">
+                  Login
+                </button>
+              </Link>
             )}
           </div>
         )}

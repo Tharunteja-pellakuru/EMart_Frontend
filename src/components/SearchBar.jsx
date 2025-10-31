@@ -1,14 +1,19 @@
-import { useState } from "react";
+// src/components/SearchBar.jsx
+import { useState, useEffect } from "react";
 import { FaSearch } from "react-icons/fa";
 
-const SearchBar = () => {
+const SearchBar = ({ onTabChange }) => {
   const [activeTab, setActiveTab] = useState("ExtraMart");
+
+  // Notify parent whenever tab changes
+  useEffect(() => {
+    onTabChange(activeTab);
+  }, [activeTab]);
 
   return (
     <div className="w-[70%] sm:w-[75%] md:w-[60%] lg:w-[45%] xl:w-[40%] mx-auto mt-6 flex flex-col items-center gap-4">
       {/* Toggle Section */}
       <div className="relative flex bg-gray-100 rounded-full shadow-inner border border-gray-200 p-1 w-fit">
-        {/* Animated background highlight */}
         <div
           className={`absolute top-1 bottom-1 left-1 w-[48%] rounded-full transition-all duration-300 ${
             activeTab === "ExtraMart"
@@ -19,7 +24,7 @@ const SearchBar = () => {
 
         <button
           onClick={() => setActiveTab("ExtraMart")}
-          className={`relative z-10 w-28 text-sm sm:text-base font-semibold transition-all duration-300 ${
+          className={`relative z-10 w-32 text-md sm:text-base font-semibold transition-all duration-300 ${
             activeTab === "ExtraMart"
               ? "text-white"
               : "text-gray-600 hover:text-green-600"
@@ -30,7 +35,7 @@ const SearchBar = () => {
 
         <button
           onClick={() => setActiveTab("ExtraBakes")}
-          className={`relative z-10 w-28 text-sm sm:text-base font-semibold transition-all duration-300 ${
+          className={`relative z-10 w-32 text-md sm:text-base font-semibold transition-all duration-300 ${
             activeTab === "ExtraBakes"
               ? "text-white"
               : "text-gray-600 hover:text-orange-600"

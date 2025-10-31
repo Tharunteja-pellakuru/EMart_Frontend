@@ -5,7 +5,6 @@ import { Provider } from "react-redux";
 import store from "./app/store";
 import "./index.css";
 import App from "./App";
-import HomePage from "./pages/HomePage";
 import Login from "./components/Login";
 
 // ✅ Theme handling

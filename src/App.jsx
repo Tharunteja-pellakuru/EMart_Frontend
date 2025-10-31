@@ -1,12 +1,12 @@
 import Footer from "./components/Footer";
 import NavBar from "./components/NavBar";
-import HomePage from "./pages/HomePage";
+import Home from "./pages/Home";
 
 const App = () => {
   return (
     <div>
       <NavBar />
-      <HomePage />
+      <Home />
       <Footer />
     </div>
   );
