@@ -8,18 +8,16 @@ const Category = ({ categories = [], storeName }) => {
 
   const storeLabel = storeName === "ExtraBakes" ? "Bakes" : "Mart";
 
-  // 🟢 Control scroll state
   const autoScrollActive = useRef(true);
   const autoScrollTimer = useRef(null);
 
-  // 🟢 Manual scroll with buttons
+  // 🟢 Manual scroll using arrow buttons
   const scroll = (direction) => {
     const container = scrollRef.current;
     if (!container) return;
 
-    // 🛑 Stop auto-scroll temporarily
-    autoScrollActive.current = false;
-    if (autoScrollTimer.current) clearTimeout(autoScrollTimer.current);
+    // Pause auto-scroll on button click
+    pauseAutoScroll();
 
     const scrollAmount = 300;
     container.scrollBy({
@@ -27,29 +25,37 @@ const Category = ({ categories = [], storeName }) => {
       behavior: "smooth",
     });
 
-    // 🕒 Resume after 3s
-    autoScrollTimer.current = setTimeout(() => {
-      autoScrollActive.current = true;
-    }, 3000);
+    // Resume auto-scroll after 3 seconds
+    resumeAutoScrollAfterDelay();
   };
 
-  // 🟢 Auto-scroll logic
+  // 🛑 Pause auto-scroll function
+  const pauseAutoScroll = () => {
+    autoScrollActive.current = false;
+    if (autoScrollTimer.current) clearTimeout(autoScrollTimer.current);
+  };
+
+  // ⏳ Resume auto-scroll after delay
+  const resumeAutoScrollAfterDelay = (delay = 3000) => {
+    autoScrollTimer.current = setTimeout(() => {
+      autoScrollActive.current = true;
+    }, delay);
+  };
+
+  // 🟢 Auto-scroll setup
   useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
 
-    // Disable auto-scroll on small screens for smoother touch UX
-    if (window.innerWidth < 768) {
-      autoScrollActive.current = false;
-      return;
-    }
-
-    let scrollDirection = 1;
-    const scrollStep = 1;
+    let scrollDirection = 1; // 1 = right, -1 = left
+    const scrollStep = 1; // speed
 
     const interval = setInterval(() => {
       if (!autoScrollActive.current) return;
+
       container.scrollLeft += scrollStep * scrollDirection;
+
+      // Reverse scroll direction at edges
       if (
         container.scrollLeft + container.clientWidth >= container.scrollWidth ||
         container.scrollLeft <= 0
@@ -58,25 +64,36 @@ const Category = ({ categories = [], storeName }) => {
       }
     }, 20);
 
-    // 🟢 Detect touch to pause/resume auto-scroll
+    // 🟢 Handle touch events for mobile
     const handleTouchStart = () => {
-      autoScrollActive.current = false;
-      if (autoScrollTimer.current) clearTimeout(autoScrollTimer.current);
+      pauseAutoScroll();
     };
-
     const handleTouchEnd = () => {
-      autoScrollTimer.current = setTimeout(() => {
-        autoScrollActive.current = true;
-      }, 3000);
+      resumeAutoScrollAfterDelay();
     };
 
+    // 🟢 Handle manual mouse scroll (desktop)
+    const handleMouseDown = () => pauseAutoScroll();
+    const handleMouseUp = () => resumeAutoScrollAfterDelay();
+    const handleWheel = () => {
+      pauseAutoScroll();
+      resumeAutoScrollAfterDelay();
+    };
+
+    // Attach listeners
     container.addEventListener("touchstart", handleTouchStart);
     container.addEventListener("touchend", handleTouchEnd);
+    container.addEventListener("mousedown", handleMouseDown);
+    container.addEventListener("mouseup", handleMouseUp);
+    container.addEventListener("wheel", handleWheel);
 
     return () => {
       clearInterval(interval);
       container.removeEventListener("touchstart", handleTouchStart);
       container.removeEventListener("touchend", handleTouchEnd);
+      container.removeEventListener("mousedown", handleMouseDown);
+      container.removeEventListener("mouseup", handleMouseUp);
+      container.removeEventListener("wheel", handleWheel);
     };
   }, []);
 
