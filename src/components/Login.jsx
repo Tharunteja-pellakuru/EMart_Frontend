@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { auth } from "../firebaseConfig";
-import ExtraMartLogo from "../assets/ExtraMart.png"; // ✅ logo path
+import ExtraMartLogo from "../assets/ExtraMart.png";
 
 const Login = () => {
   const [countryCode, setCountryCode] = useState("+91");
@@ -10,53 +10,80 @@ const Login = () => {
   const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isSignup, setIsSignup] = useState(false); // ✅ toggle between login/signup
+  const [isSignup, setIsSignup] = useState(false);
 
   const navigate = useNavigate();
 
-  // ✅ reCAPTCHA + OTP sending
+  // ✅ Initialize reCAPTCHA only once
+  const setupRecaptcha = () => {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(
+        auth,
+        "recaptcha-container",
+        {
+          size: "invisible",
+          callback: (response) => {
+            console.log("reCAPTCHA verified ✅");
+          },
+          "expired-callback": () => {
+            console.warn("reCAPTCHA expired. Please verify again.");
+          },
+        }
+      );
+    }
+  };
+
+  // ✅ Send OTP
   const sendOtp = async () => {
-    if (!phoneNumber) return alert("Please enter your phone number.");
+    if (!phoneNumber.trim()) return alert("Please enter your phone number.");
     setLoading(true);
 
     try {
-      const recaptcha = new RecaptchaVerifier(auth, "recaptcha-container", {
-        size: "invisible",
-      });
+      setupRecaptcha(); // only once per page
+      const appVerifier = window.recaptchaVerifier;
 
       const fullPhone = `${countryCode}${phoneNumber}`;
       const confirmation = await signInWithPhoneNumber(
         auth,
         fullPhone,
-        recaptcha
+        appVerifier
       );
+
       window.confirmationResult = confirmation;
       setIsOtpSent(true);
+      alert("OTP sent successfully 📩");
     } catch (error) {
       console.error("Error sending OTP:", error);
-      alert(error.message);
+      if (error.code === "auth/billing-not-enabled") {
+        alert(
+          "Firebase billing not enabled for phone auth. Please enable Blaze plan (you won’t be charged for low usage)."
+        );
+      } else {
+        alert(error.message);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Verify OTP (for login or signup)
+  // ✅ Verify OTP (Login or Signup)
   const verifyOtp = async () => {
-    if (!otp) return alert("Enter OTP");
+    if (!otp.trim()) return alert("Please enter the OTP.");
     setLoading(true);
+
     try {
       const result = await window.confirmationResult.confirm(otp);
       const user = result.user;
 
       if (isSignup) {
-        alert("Signup successful! 🎉");
+        alert("🎉 Signup successful!");
       } else {
-        alert("Login successful! 🎉");
+        alert("🎉 Login successful!");
       }
 
       navigate("/");
     } catch (error) {
-      console.error(error);
+      console.error("OTP verification failed:", error);
       alert("Invalid OTP. Please try again.");
     } finally {
       setLoading(false);
@@ -69,7 +96,7 @@ const Login = () => {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm sm:max-w-md md:max-w-lg p-6 sm:p-8">
-        {/* ✅ Cancel Button (Top-right corner) */}
+        {/* Cancel Button */}
         <button
           onClick={handleCancel}
           className="absolute top-3 right-4 text-gray-500 hover:text-red-500 text-2xl font-bold"
@@ -78,7 +105,7 @@ const Login = () => {
           ×
         </button>
 
-        {/* ✅ Logo */}
+        {/* Logo */}
         <div className="flex justify-center mb-6 mt-2">
           <img
             src={ExtraMartLogo}
@@ -87,15 +114,15 @@ const Login = () => {
           />
         </div>
 
-        {/* ✅ Title */}
+        {/* Title */}
         <h2 className="text-2xl sm:text-3xl font-semibold text-center text-green-600 mb-4">
           {isSignup ? "Sign Up with OTP" : "Login with OTP"}
         </h2>
 
-        {/* ✅ Phone or OTP Input */}
+        {/* Input Section */}
         {!isOtpSent ? (
           <>
-            {/* Phone Input + Country Code */}
+            {/* Phone Input */}
             <div className="flex gap-2 mb-4">
               <select
                 value={countryCode}
@@ -130,6 +157,7 @@ const Login = () => {
               onChange={(e) => setOtp(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-green-500 outline-none"
             />
+
             <button
               onClick={verifyOtp}
               disabled={loading}
@@ -144,7 +172,7 @@ const Login = () => {
           </>
         )}
 
-        {/* ✅ Toggle between Login and Signup */}
+        {/* Toggle Login/Signup */}
         <div className="text-center mt-4">
           {isSignup ? (
             <p className="text-gray-600">
@@ -177,6 +205,7 @@ const Login = () => {
           )}
         </div>
 
+        {/* reCAPTCHA placeholder */}
         <div id="recaptcha-container"></div>
       </div>
     </div>
