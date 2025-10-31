@@ -1,103 +1,108 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 const Category = ({ categories = [], storeName }) => {
   const scrollRef = useRef(null);
+  const autoScrollActive = useRef(true);
+  const scrollDirection = useRef(1);
+  const intervalRef = useRef(null);
+  const resumeTimer = useRef(null);
+
   const CLOUDINARY_BASE_URL =
     "https://res.cloudinary.com/djpayyzvm/image/upload/";
-
   const storeLabel = storeName === "ExtraBakes" ? "Bakes" : "Mart";
 
-  const autoScrollActive = useRef(true);
-  const autoScrollTimer = useRef(null);
+  // Pause auto-scroll
+  const pauseAutoScroll = () => {
+    autoScrollActive.current = false;
+    clearInterval(intervalRef.current);
+    clearTimeout(resumeTimer.current);
+  };
 
-  // 🟢 Manual scroll using arrow buttons
+  // Resume auto-scroll after delay
+  const resumeAutoScrollAfterDelay = (delay = 3000) => {
+    clearTimeout(resumeTimer.current);
+    resumeTimer.current = setTimeout(() => {
+      autoScrollActive.current = true;
+      startAutoScroll();
+    }, delay);
+  };
+
+  // Manual scroll buttons
   const scroll = (direction) => {
     const container = scrollRef.current;
     if (!container) return;
-
-    // Pause auto-scroll on button click
     pauseAutoScroll();
-
     const scrollAmount = 300;
     container.scrollBy({
       left: direction === "left" ? -scrollAmount : scrollAmount,
       behavior: "smooth",
     });
-
-    // Resume auto-scroll after 3 seconds
     resumeAutoScrollAfterDelay();
   };
 
-  // 🛑 Pause auto-scroll function
-  const pauseAutoScroll = () => {
-    autoScrollActive.current = false;
-    if (autoScrollTimer.current) clearTimeout(autoScrollTimer.current);
+  // 🌀 Start auto-scroll
+  const startAutoScroll = () => {
+    const container = scrollRef.current;
+    if (!container || !categories.length) return;
+
+    clearInterval(intervalRef.current);
+    const scrollStep = 1;
+    const intervalSpeed = 20;
+
+    intervalRef.current = setInterval(() => {
+      if (!autoScrollActive.current) return;
+
+      container.scrollLeft += scrollStep * scrollDirection.current;
+
+      // Reverse direction at ends
+      if (
+        container.scrollLeft + container.clientWidth >=
+        container.scrollWidth
+      ) {
+        scrollDirection.current = -1;
+      } else if (container.scrollLeft <= 0) {
+        scrollDirection.current = 1;
+      }
+    }, intervalSpeed);
   };
 
-  // ⏳ Resume auto-scroll after delay
-  const resumeAutoScrollAfterDelay = (delay = 3000) => {
-    autoScrollTimer.current = setTimeout(() => {
-      autoScrollActive.current = true;
-    }, delay);
-  };
+  // Initialize auto-scroll
+  useEffect(() => {
+    const INITIAL_DELAY = 2000; // wait before first scroll
+    const timer = setTimeout(() => startAutoScroll(), INITIAL_DELAY);
 
-  // 🟢 Auto-scroll setup
+    return () => {
+      clearTimeout(timer);
+      clearInterval(intervalRef.current);
+      clearTimeout(resumeTimer.current);
+    };
+  }, [categories]);
+
+  // Pause on user interaction
   useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
 
-    let scrollDirection = 1; // 1 = right, -1 = left
-    const scrollStep = 1; // speed
-
-    const interval = setInterval(() => {
-      if (!autoScrollActive.current) return;
-
-      container.scrollLeft += scrollStep * scrollDirection;
-
-      // Reverse scroll direction at edges
-      if (
-        container.scrollLeft + container.clientWidth >= container.scrollWidth ||
-        container.scrollLeft <= 0
-      ) {
-        scrollDirection *= -1;
-      }
-    }, 20);
-
-    // 🟢 Handle touch events for mobile
-    const handleTouchStart = () => {
-      pauseAutoScroll();
-    };
-    const handleTouchEnd = () => {
-      resumeAutoScrollAfterDelay();
-    };
-
-    // 🟢 Handle manual mouse scroll (desktop)
-    const handleMouseDown = () => pauseAutoScroll();
-    const handleMouseUp = () => resumeAutoScrollAfterDelay();
-    const handleWheel = () => {
+    const stopScroll = () => {
       pauseAutoScroll();
       resumeAutoScrollAfterDelay();
     };
 
-    // Attach listeners
-    container.addEventListener("touchstart", handleTouchStart);
-    container.addEventListener("touchend", handleTouchEnd);
-    container.addEventListener("mousedown", handleMouseDown);
-    container.addEventListener("mouseup", handleMouseUp);
-    container.addEventListener("wheel", handleWheel);
+    container.addEventListener("touchstart", stopScroll);
+    container.addEventListener("wheel", stopScroll);
+    container.addEventListener("mousedown", stopScroll);
+    container.addEventListener("touchmove", stopScroll);
 
     return () => {
-      clearInterval(interval);
-      container.removeEventListener("touchstart", handleTouchStart);
-      container.removeEventListener("touchend", handleTouchEnd);
-      container.removeEventListener("mousedown", handleMouseDown);
-      container.removeEventListener("mouseup", handleMouseUp);
-      container.removeEventListener("wheel", handleWheel);
+      container.removeEventListener("touchstart", stopScroll);
+      container.removeEventListener("wheel", stopScroll);
+      container.removeEventListener("mousedown", stopScroll);
+      container.removeEventListener("touchmove", stopScroll);
     };
   }, []);
 
-  // 🟠 Dynamic colors & emoji
+  // 🎨 UI Styles
   const accentColor =
     storeLabel === "Mart" ? "text-green-600" : "text-orange-600";
   const hoverBg =
@@ -108,15 +113,15 @@ const Category = ({ categories = [], storeName }) => {
 
   return (
     <div className="relative w-[90%] my-1 mx-auto py-7 sm:py-11 px-4 sm:px-8 bg-white overflow-visible">
-      {/* 🟢 Dynamic Heading */}
+      {/* 🟢 Heading */}
       <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-10 text-gray-800 text-center">
         {emoji} Explore Our <span className={accentColor}>{storeLabel}</span>{" "}
         Collection
       </h2>
 
-      {/* 🟢 Scrollable Category Row */}
+      {/* 🟢 Scroll Row */}
       <div className="relative flex items-center overflow-visible">
-        {/* Left button */}
+        {/* Left Button */}
         <button
           onClick={() => scroll("left")}
           className={`hidden sm:flex absolute -left-3 md:-left-6 bg-white shadow-md rounded-full p-3 sm:p-4 ${hoverBg} hover:scale-110 transition-all duration-300 z-10 items-center justify-center`}
@@ -150,7 +155,7 @@ const Category = ({ categories = [], storeName }) => {
           ))}
         </div>
 
-        {/* Right button */}
+        {/* Right Button */}
         <button
           onClick={() => scroll("right")}
           className={`hidden sm:flex absolute -right-3 md:-right-6 bg-white shadow-md rounded-full p-3 sm:p-4 ${hoverBg} hover:scale-110 transition-all duration-300 z-10 items-center justify-center`}
@@ -159,7 +164,6 @@ const Category = ({ categories = [], storeName }) => {
         </button>
       </div>
 
-      {/* Hide scrollbar */}
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
