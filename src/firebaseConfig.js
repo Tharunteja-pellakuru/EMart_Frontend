@@ -1,27 +1,17 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import {
-  getAuth,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-} from "firebase/auth";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCsZT7kchSvao4z9rigqz6w1p8zpANHO2Y",
-  authDomain: "emart-dceb9.firebaseapp.com",
-  projectId: "emart-dceb9",
-  storageBucket: "emart-dceb9.firebasestorage.app",
-  messagingSenderId: "598518619157",
-  appId: "1:598518619157:web:bd71e79c7676180479c21c",
-  measurementId: "G-G6F3E2M0T7",
+  apiKey: "AIzaSyBHGRSvSh4Y-ZkKnh_iTuKf225tBGwAvF0",
+  authDomain: "emart-ee382.firebaseapp.com",
+  projectId: "emart-ee382",
+  storageBucket: "emart-ee382.firebasestorage.app",
+  messagingSenderId: "43338568383",
+  appId: "1:43338568383:web:bb68a721ce5c31935dec0a",
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const auth = getAuth(app);
-auth.languageCode = "en"; // optional: sets language for reCAPTCHA
-
-export { auth, RecaptchaVerifier, signInWithPhoneNumber };

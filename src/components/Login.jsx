@@ -1,11 +1,8 @@
-import { useState } from "react";
-import {
-  auth,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-} from "../firebaseConfig";
+import { useState, useEffect } from "react";
+import { auth, signInWithPhoneNumber } from "../firebaseConfig";
+import { RecaptchaVerifier } from "firebase/auth"; // ✅ correct import path
 import { useDispatch } from "react-redux";
-import { login } from "../features/authSlice"; // ✅ correct action
+import { login } from "../features/authSlice";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
@@ -18,34 +15,33 @@ const Login = () => {
 
   const handleClose = () => navigate("/");
 
-  // ✅ Setup reCAPTCHA only once
-  const setupRecaptcha = () => {
+  // ✅ Initialize Recaptcha only once
+  useEffect(() => {
     if (!window.recaptchaVerifier) {
       window.recaptchaVerifier = new RecaptchaVerifier(
-        auth,
-        "recaptcha-container",
+        "recaptcha-container", // ✅ element ID first (not auth)
         {
-          size: "invisible",
+          size: "invisible", // ✅ free invisible v2 mode
           callback: () => {
-            console.log("reCAPTCHA verified");
+            console.log("reCAPTCHA verified ✅");
           },
           "expired-callback": () => {
             setMessage("reCAPTCHA expired. Please try again.");
           },
-        }
+        },
+        auth // ✅ pass auth as 3rd param
       );
     }
-  };
+  }, []);
 
   // ✅ Send OTP
   const sendOtp = async (e) => {
     e.preventDefault();
 
-    if (!phone || phone.length < 10) {
+    if (!phone || phone.length !== 10) {
       return setMessage("Please enter a valid 10-digit phone number");
     }
 
-    setupRecaptcha();
     const appVerifier = window.recaptchaVerifier;
 
     try {
@@ -57,8 +53,14 @@ const Login = () => {
       setConfirmationResult(result);
       setMessage("✅ OTP sent successfully!");
     } catch (error) {
-      console.error(error);
-      setMessage("Error sending OTP: " + error.message);
+      console.error("OTP Error:", error);
+      if (error.code === "auth/billing-not-enabled") {
+        setMessage(
+          "⚠️ Please switch your Firebase project to reCAPTCHA v2 (free) mode."
+        );
+      } else {
+        setMessage("Error sending OTP: " + error.message);
+      }
     }
   };
 
@@ -73,7 +75,7 @@ const Login = () => {
         phone: userCred.user.phoneNumber,
         uid: userCred.user.uid,
       };
-      dispatch(login(user)); // ✅ corrected action name
+      dispatch(login(user));
       setMessage("✅ Login successful!");
       navigate("/");
     } catch (error) {
@@ -140,6 +142,7 @@ const Login = () => {
           </p>
         )}
 
+        {/* ✅ Required for Recaptcha */}
         <div id="recaptcha-container"></div>
 
         <button
